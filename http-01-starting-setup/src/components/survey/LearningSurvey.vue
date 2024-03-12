@@ -9,7 +9,13 @@
         </div>
         <h3>My learning experience was ...</h3>
         <div class="form-control">
-          <input type="radio" id="rating-poor" value="poor" name="rating" v-model="chosenRating" />
+          <input
+            type="radio"
+            id="rating-poor"
+            value="poor"
+            name="rating"
+            v-model="chosenRating"
+          />
           <label for="rating-poor">Poor</label>
         </div>
         <div class="form-control">
@@ -23,12 +29,19 @@
           <label for="rating-average">Average</label>
         </div>
         <div class="form-control">
-          <input type="radio" id="rating-great" value="great" name="rating" v-model="chosenRating" />
+          <input
+            type="radio"
+            id="rating-great"
+            value="great"
+            name="rating"
+            v-model="chosenRating"
+          />
           <label for="rating-great">Great</label>
         </div>
-        <p
-          v-if="invalidInput"
-        >One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if="invalidInput">
+          One or more input fields are invalid. Please check your provided data.
+        </p>
+        <p v-if="error">{{ error }}</p>
         <div>
           <base-button>Submit</base-button>
         </div>
@@ -44,6 +57,7 @@ export default {
       enteredName: '',
       chosenRating: null,
       invalidInput: false,
+      error: null
     };
   },
   // emits: ['survey-submit'],
@@ -59,18 +73,38 @@ export default {
       //   userName: this.enteredName,
       //   rating: this.chosenRating,
       // });
-      
+      this.error = null;
       fetch(`http://localhost:8090/vue-test/experiences`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Basic YWRtaW46MTIzNDU=`,
         },
-        body: JSON.stringify({name: this.enteredName, rating: this.chosenRating})
+        body: JSON.stringify({
+          name: this.enteredName,
+          rating: this.chosenRating,
+        }),
       })
-      .then(response => response.json())
-      .then((data) => {
-        console.log(data);
-      })
+        .then((response) => {
+          if(response.ok) {
+            console.log(response.headers);
+            console.log(response.headers.get('Authorization'));
+            window.sessionStorage.setItem(
+              'Authorization',
+              response.headers.get('Authorization')
+            );
+            return response.text();
+          }else {
+            throw new Error('Could not save data!');
+          }
+        })
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = error.message;
+        });
 
       this.enteredName = '';
       this.chosenRating = null;
